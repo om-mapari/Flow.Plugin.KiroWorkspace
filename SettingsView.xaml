@@ -1,10 +1,10 @@
-<UserControl
-    x:Class="Flow.Plugin.VSCodeWorkspaces.SettingsView"
+﻿<UserControl
+    x:Class="Flow.Plugin.KiroWorkspace.SettingsView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:resx="clr-namespace:Flow.Plugin.VSCodeWorkspaces.Properties"
+    xmlns:resx="clr-namespace:Flow.Plugin.KiroWorkspace.Properties"
     Height="350"
     mc:Ignorable="d">
     <Grid Margin="0">
@@ -24,13 +24,6 @@
                 Content="{x:Static resx:Resources.DiscoverWorkspaces}"
                 IsChecked="{Binding DiscoverWorkspaces}"
                 ToolTip="{x:Static resx:Resources.DiscoverWorkspacesTooltip}"
-                Unchecked="Save" />
-            <CheckBox
-                Margin="70,8,10,8"
-                Checked="Save"
-                Content="{x:Static resx:Resources.DiscoverMachines}"
-                IsChecked="{Binding DiscoverMachines}"
-                ToolTip="{x:Static resx:Resources.DiscoverMachinesTooltip}"
                 Unchecked="Save" />
         </StackPanel>
         <ListView

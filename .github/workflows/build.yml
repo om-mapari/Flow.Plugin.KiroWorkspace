@@ -1,0 +1,110 @@
+name: build
+
+# Builds, tests and packages the Flow Launcher plugin entirely in GitHub Actions.
+# No local .NET SDK is needed: download the ZIP from the run's "Artifacts" section.
+on:
+  push:
+    branches: [main, 'feat/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  # Flow.Plugin.KiroWorkspace.csproj targets net7.0-windows (inherited from upstream), so the 7.0 SDK is used.
+  # The repository has no global.json that would require a different SDK.
+  DOTNET_VERSION: 7.0.x
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Show .NET info
+        run: dotnet --info
+
+      - name: Restore
+        run: dotnet restore Flow.Plugin.KiroWorkspace.sln -p:Platform=x64
+
+      - name: Build (Release)
+        run: >
+          dotnet build Flow.Plugin.KiroWorkspace.sln
+          -c Release -p:Platform=x64 --no-restore
+          -bl:artifacts/logs/build.binlog
+
+      - name: Test
+        run: >
+          dotnet test tests/Flow.Plugin.KiroWorkspace.Tests/Flow.Plugin.KiroWorkspace.Tests.csproj
+          -c Release -p:Platform=x64 --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --logger "console;verbosity=normal"
+          --results-directory artifacts/test-results
+
+      - name: Package plugin
+        id: package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $meta = Get-Content plugin.json -Raw | ConvertFrom-Json
+          $name = "Flow.Plugin.KiroWorkspace-$($meta.Version)"
+          $stage = Join-Path 'artifacts/stage' $name
+
+          # Same approach as the upstream project: publish for win-x64 (framework-dependent) and zip the output.
+          dotnet publish Flow.Plugin.KiroWorkspace.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained false --no-restore -o $stage
+          if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE" }
+
+          # Everything Flow Launcher needs must be at the root of the ZIP.
+          $required = @(
+            'plugin.json',
+            $meta.ExecuteFileName,
+            'Flow.Plugin.KiroWorkspace.deps.json',
+            'Microsoft.Data.Sqlite.dll',
+            'Images/folder.png'
+          )
+          foreach ($file in $required) {
+            if (-not (Test-Path (Join-Path $stage $file))) { throw "Package is missing required file: $file" }
+          }
+          if (-not (Get-ChildItem $stage -Recurse -Filter 'e_sqlite3.dll')) { throw 'Package is missing the native SQLite library (e_sqlite3.dll)' }
+
+          $zip = Join-Path (Resolve-Path 'artifacts').Path "$name.zip"
+          7z a -tzip -mx=9 $zip "./$stage/*"
+          if ($LASTEXITCODE -ne 0) { throw "7z failed with exit code $LASTEXITCODE" }
+
+          Write-Host '--- ZIP contents ---'
+          7z l $zip
+
+          "zip-path=$zip" >> $env:GITHUB_OUTPUT
+
+      - name: Upload plugin ZIP
+        uses: actions/upload-artifact@v7
+        with:
+          path: ${{ steps.package.outputs.zip-path }}
+          archive: false
+          if-no-files-found: error
+
+      - name: Upload logs and test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-logs
+          path: |
+            artifacts/logs
+            artifacts/test-results
+          if-no-files-found: warn
+          retention-days: 14
