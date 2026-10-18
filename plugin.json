@@ -4,7 +4,7 @@
   "ActionKeyword": "k",
   "Name": "Kiro Workspaces",
   "Author": "om-mapari (Kiro adaptation); original authors: ricardosantos9521, MaskedRPGFan, taooceros",
-  "Version": "1.0.0",
+  "Version": "0.1.0",
   "Language": "csharp",
   "Website": "https://github.com/om-mapari/Flow.Plugin.KiroWorkspace",
   "ExecuteFileName": "Flow.Plugin.KiroWorkspace.dll",
