@@ -26,7 +26,7 @@ The original Git history is preserved; see `git log`. Licensed under MIT, see [L
 | Action keyword | `{` | `kiro` (so both plugins can be installed together) |
 | SSH host list | Read from `remote.SSH.configFile` and opened with the Microsoft Remote - SSH extension | **Removed** (see below) |
 | Launching | `code --folder-uri` / `--file-uri` | `Kiro.exe --folder-uri` / `--file-uri` |
-| Icons | VS Code logo | Kiro's own executable icon is read at runtime; the plugin ships only a neutral folder icon |
+| Icons | VS Code logo | Kiro's own executable icon is read at runtime; the plugin icon is the Kiro app icon (see Trademarks) |
 | Translations | 17 locales | English only (the old strings described VS Code and SSH features and were not re-reviewed) |
 
 ## Behaviour
@@ -79,3 +79,7 @@ What is not verified by the automated build:
 Builds run in GitHub Actions ([`.github/workflows/build.yml`](.github/workflows/build.yml)): restore, Release build, tests, then
 `dotnet publish -r win-x64` zipped as the plugin package. Triggered on pushes to `main` and `feat/**`, on pull requests and manually.
 If you do have the .NET 7 SDK locally, `dotnet build -c Release -p:Platform=x64` works the same way.
+
+## Trademarks
+
+The Kiro name and icon belong to their owner and are used here only to identify the application this plugin works with. Images/kiro.png is not covered by the MIT license.

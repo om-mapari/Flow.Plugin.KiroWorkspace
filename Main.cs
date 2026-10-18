@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation
+// Copyright (c) Microsoft Corporation
 // The Microsoft Corporation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 namespace Flow.Plugin.KiroWorkspace
@@ -14,7 +14,7 @@ namespace Flow.Plugin.KiroWorkspace
 
     public class Main : IPlugin, IPluginI18n, ISettingProvider, IContextMenu
     {
-        private const string FallbackIconPath = "Images\\folder.png";
+        private const string FallbackIconPath = "Images\\kiro.png";
 
         internal static PluginInitContext Context { get; private set; }
 

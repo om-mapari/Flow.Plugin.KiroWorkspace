@@ -79,7 +79,8 @@ jobs:
             $meta.ExecuteFileName,
             'Flow.Plugin.KiroWorkspace.deps.json',
             'Microsoft.Data.Sqlite.dll',
-            'Images/folder.png'
+            'Images/folder.png',
+            'Images/kiro.png'
           )
           foreach ($file in $required) {
             if (-not (Test-Path (Join-Path $stage $file))) { throw "Package is missing required file: $file" }

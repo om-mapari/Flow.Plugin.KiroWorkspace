@@ -9,5 +9,5 @@
   "Website": "https://github.com/om-mapari/Flow.Plugin.KiroWorkspace",
   "ExecuteFileName": "Flow.Plugin.KiroWorkspace.dll",
   "IsGlobal": false,
-  "IcoPath": "Images\\folder.png"
+  "IcoPath": "Images\\kiro.png"
 }

@@ -45,4 +45,4 @@ Used under their own licenses; none are modified or redistributed outside the pl
 | xunit, Microsoft.NET.Test.Sdk (tests only, not shipped) | Apache-2.0 / MIT |
 
 "Kiro" and the Kiro logo are trademarks of their respective owner. This project is not affiliated with or
-endorsed by Kiro, Flow Launcher, Microsoft, or the authors of the upstream plugin. It does not ship any Kiro logo or icon.
+endorsed by Kiro, Flow Launcher, Microsoft, or the authors of the upstream plugin. The Kiro app icon in `Images/kiro.png` is included only to identify the application this plugin opens; it remains the property of its owner and is not covered by this project's MIT license.
