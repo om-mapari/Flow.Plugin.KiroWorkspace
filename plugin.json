@@ -1,7 +1,7 @@
 {
   "ID": "40F5E4CF74DC46B4B885800528B15A50",
   "Description": "Opens workspaces and folders recently opened in Kiro.",
-  "ActionKeyword": "kiro",
+  "ActionKeyword": "k",
   "Name": "Kiro Workspaces",
   "Author": "om-mapari (Kiro adaptation); original authors: ricardosantos9521, MaskedRPGFan, taooceros",
   "Version": "1.0.0",

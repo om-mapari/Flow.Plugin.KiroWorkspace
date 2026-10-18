@@ -3,7 +3,7 @@
 A [Flow Launcher](https://www.flowlauncher.com/) plugin that lists the workspaces and folders you recently opened in
 [Kiro](https://kiro.dev/) and opens them with a few keystrokes.
 
-Type the action keyword `kiro`, then part of a folder name, and press Enter.
+Type the action keyword `k`, then part of a folder name, and press Enter.
 
 ## Credits and relationship to the original project
 
@@ -23,7 +23,7 @@ The original Git history is preserved; see `git log`. Licensed under MIT, see [L
 | Executable | `code`, `code-insiders`, `codium` from `PATH` | `Kiro.exe` from `PATH` (`...\Kiro\bin`), then `%LOCALAPPDATA%\Programs\Kiro`, then `%ProgramFiles%\Kiro` |
 | User data | `%APPDATA%\Code`, `~\.vscode-shared` | `%APPDATA%\Kiro`, `~\.kiro-shared` |
 | Recent list | `history.recentlyOpenedPathsList` in `state.vscdb` (and legacy `storage.json`) | `history.recentlyOpenedPathsList` in `state.vscdb` only |
-| Action keyword | `{` | `kiro` (so both plugins can be installed together) |
+| Action keyword | `{` | `k` (so both plugins can be installed together; changeable in Flow Launcher settings) |
 | SSH host list | Read from `remote.SSH.configFile` and opened with the Microsoft Remote - SSH extension | **Removed** (see below) |
 | Launching | `code --folder-uri` / `--file-uri` | `Kiro.exe --folder-uri` / `--file-uri` |
 | Icons | VS Code logo | Kiro's own executable icon is read at runtime; the plugin icon is the Kiro app icon (see Trademarks) |
@@ -51,7 +51,7 @@ The original Git history is preserved; see `git log`. Licensed under MIT, see [L
 4. Extract the ZIP into a new folder named `Flow.Plugin.KiroWorkspace` in Flow Launcher's user plugin directory:
    `%APPDATA%\FlowLauncher\Plugins\` (for the portable edition use `UserData\Plugins\` next to the executable).
    `plugin.json` must sit directly inside that folder.
-5. Start Flow Launcher and type `kiro`.
+5. Start Flow Launcher and type `k`.
 
 ## Remote workspaces (WSL, SSH, Dev Containers)
 
