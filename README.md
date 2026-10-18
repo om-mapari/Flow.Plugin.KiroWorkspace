@@ -50,14 +50,16 @@ _Screenshot coming soon_
 
 ## Installation
 
-No release has been published yet. Plugin packages come from the GitHub Actions build.
+Download the plugin ZIP from the [Releases page](https://github.com/om-mapari/Flow.Plugin.KiroWorkspace/releases/latest)
+(`Flow.Plugin.KiroWorkspace-<version>.zip`). Builds of unreleased changes are also available as artifacts of the **build**
+workflow on the **Actions** tab.
 
-1. Open the **Actions** tab of this repository and select the **build** workflow.
-2. Open the latest successful run and download the `Flow.Plugin.KiroWorkspace-<version>.zip` file from its **Artifacts** section.
-3. Close Flow Launcher.
-4. Create a folder for the plugin under `%APPDATA%\FlowLauncher\Plugins\`, for example `Kiro Workspaces-1.0.0`, and
+If the plugin is listed in Flow Launcher's plugin store, you can install it from Settings > Plugin Store instead.
+Until then, install it manually:
+1. Close Flow Launcher.
+2. Create a folder for the plugin under `%APPDATA%\FlowLauncher\Plugins\`, for example `Kiro Workspaces-1.0.0`, and
    extract the ZIP into it. `plugin.json` must sit directly inside that folder, not in a subfolder.
-5. Start Flow Launcher again.
+3. Start Flow Launcher again.
 
 ## Usage
 
@@ -158,7 +160,7 @@ Known limitations:
 
 ## Building
 
-Builds run only in GitHub Actions, using [`.github/workflows/build.yml`](.github/workflows/build.yml). The workflow runs on pushes to
+Builds run only in GitHub Actions. Releases are created by [`.github/workflows/release.yml`](.github/workflows/release.yml) when a `v<version>` tag is pushed; the tag must match the `Version` in `plugin.json`. Everyday builds use [`.github/workflows/build.yml`](.github/workflows/build.yml). The workflow runs on pushes to
 `main` and `feat/**`, on pull requests, and manually. It restores, builds in Release for x64, runs the tests, then publishes for
 `win-x64` and zips the output as the plugin package. It checks that `plugin.json`, the plugin DLL and the SQLite libraries are in the ZIP.
 
