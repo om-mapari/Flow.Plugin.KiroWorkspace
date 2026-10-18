@@ -3,20 +3,120 @@
 A [Flow Launcher](https://www.flowlauncher.com/) plugin that lists the workspaces and folders you recently opened in
 [Kiro](https://kiro.dev/) and opens them with a few keystrokes.
 
+[![build](https://github.com/om-mapari/Flow.Plugin.KiroWorkspace/actions/workflows/build.yml/badge.svg)](https://github.com/om-mapari/Flow.Plugin.KiroWorkspace/actions/workflows/build.yml)
+
 Type the action keyword `k`, then part of a folder name, and press Enter.
 
-## Credits and relationship to the original project
+## Features
 
-This is a fork of [taooceros/Flow.Plugin.VSCodeWorkspace](https://github.com/taooceros/Flow.Plugin.VSCodeWorkspace),
-the VS Code Workspaces plugin for Flow Launcher, adapted for Kiro. The original code in turn comes from
-[Microsoft PowerToys](https://github.com/microsoft/PowerToys/tree/main/src/modules/launcher/Plugins/Community.PowerToys.Run.Plugin.VSCodeWorkspaces).
-Thanks to the original authors (ricardosantos9521, MaskedRPGFan, taooceros and contributors).
+- Lists the folders and `.code-workspace` files from Kiro's recently opened list.
+- Fuzzy matching on the folder name, using Flow Launcher's own search.
+- Enter opens the workspace in Kiro.
+- Ctrl+Enter, or the context menu, opens a local folder in the file manager.
+- Extra folders can be added in the plugin settings, and automatic discovery can be switched off.
+- Shows a clear message if Kiro cannot be found, if the Kiro executable was moved, or if a local folder no longer exists.
 
-This project is independent. It is **not** affiliated with or endorsed by the original author, Microsoft, Kiro or Flow Launcher.
-The original Git history is preserved; see `git log`. Licensed under MIT, see [LICENSE](LICENSE) and
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+## Screenshots
 
-## What changed from the VS Code plugin
+<!--
+TODO (maintainer): add real screenshots, then remove the "coming soon" lines and uncomment the image links.
+Expected files (not created yet; the docs/images folder does not exist):
+  docs/images/search.png        Flow Launcher with `k` typed and a list of recent Kiro workspaces.
+  docs/images/settings.png      Flow Settings > Plugins > Kiro Workspaces, showing the settings panel.
+  docs/images/context-menu.png  The context menu of a workspace result showing "Open Folder".
+-->
+
+Search results:
+
+_Screenshot coming soon_
+<!-- ![Search results](docs/images/search.png) -->
+
+Plugin settings:
+
+_Screenshot coming soon_
+<!-- ![Plugin settings](docs/images/settings.png) -->
+
+Context menu:
+
+_Screenshot coming soon_
+<!-- ![Context menu](docs/images/context-menu.png) -->
+
+## Requirements
+
+- Windows x64 with Flow Launcher installed.
+- Kiro installed. The plugin looks for `Kiro.exe` on `PATH`, then in `%LOCALAPPDATA%\Programs\Kiro`, then in
+  `%ProgramFiles%\Kiro` (see [How it works](#how-it-works)).
+- No .NET SDK is needed to use the plugin. The package is framework-dependent and targets `net7.0-windows`.
+
+## Installation
+
+No release has been published yet. Plugin packages come from the GitHub Actions build.
+
+1. Open the **Actions** tab of this repository and select the **build** workflow.
+2. Open the latest successful run and download the `Flow.Plugin.KiroWorkspace-<version>.zip` file from its **Artifacts** section.
+3. Close Flow Launcher.
+4. Create a folder for the plugin under `%APPDATA%\FlowLauncher\Plugins\`, for example `Kiro Workspaces-1.0.0`, and
+   extract the ZIP into it. `plugin.json` must sit directly inside that folder, not in a subfolder.
+5. Start Flow Launcher again.
+
+## Usage
+
+- Type `k` to list your recent Kiro workspaces. Add part of a folder name to filter the list, for example `k myproj`.
+- Press Enter to open the selected workspace in Kiro.
+- Press Ctrl+Enter to open the folder in the file manager instead. This applies to local folders only. For a
+  `.code-workspace` file, the folder that contains the file is opened.
+- Open the context menu on a result and choose **Open Folder** for the same file manager action. The menu entry is
+  shown for local workspaces only.
+- To change the action keyword, go to Flow Launcher Settings > Plugins > Kiro Workspaces.
+
+### Plugin settings
+
+Open the settings panel from Flow Launcher Settings > Plugins > Kiro Workspaces.
+
+- **Discover Workspaces**: when checked (the default), the plugin reads the recently opened list from Kiro. Clear it to show
+  only the extra folders you add yourself.
+- **Extra Folder URI**: add folders that are not in Kiro's recent list. Type a folder path or a URI in the text box and click
+  **Add**. A plain path is converted to a `file:///` URI. Select entries and click **Delete** to remove them.
+
+## How it works
+
+Kiro is built on Code OSS and stores its recently opened list in the same way VS Code does. The plugin:
+
+1. Finds `Kiro.exe`: first in the directories on `PATH` (a `bin` entry such as `...\Kiro\bin` maps to its parent folder), then in
+   `%LOCALAPPDATA%\Programs\Kiro`, then in `%ProgramFiles%\Kiro`.
+2. Reads the `history.recentlyOpenedPathsList` entry from two SQLite databases, when they exist:
+   - `%APPDATA%\Kiro\User\globalStorage\state.vscdb`
+   - `~\.kiro-shared\sharedStorage\state.vscdb`
+
+   The databases are opened read-only. If one cannot be read, the error is logged and the query continues.
+3. Merges the entries with your extra folders and removes duplicates.
+4. Opens a selection by running `Kiro.exe --folder-uri <uri>`, or `Kiro.exe --file-uri <uri>` for `.code-workspace` files.
+
+## Troubleshooting
+
+**"Kiro was not found"**
+The plugin could not find `Kiro.exe`. Install Kiro, or add its `bin` folder to `PATH`, then try again. The plugin checks
+again on the next search, so you do not need to restart Flow Launcher after installing Kiro.
+
+**"Kiro.exe no longer exists at the location it was found"**
+Kiro was moved or uninstalled after the plugin found it. Reinstall Kiro or restore it to its previous location.
+
+**"This path no longer exists: ..."**
+The folder or workspace file from the list has been moved or deleted. Open the folder you want in Kiro once so that
+it appears in the list again, or add the new location as an extra folder in the plugin settings.
+
+**"Can't open this workspace"**
+Starting Kiro failed. Details are written to the Flow Launcher log.
+
+**The list is empty**
+Check that **Discover Workspaces** is enabled in the plugin settings, and that you have opened at least one folder in Kiro.
+The recent list is read from the two database files listed in [How it works](#how-it-works).
+
+**Logs**
+Flow Launcher writes its logs to `%APPDATA%\FlowLauncher\Logs`. Errors from this plugin, such as an unreadable
+Kiro database or a failed launch, are logged there.
+
+## Differences from the VS Code plugin
 
 | Area | VS Code plugin | This plugin |
 | --- | --- | --- |
@@ -29,56 +129,60 @@ The original Git history is preserved; see `git log`. Licensed under MIT, see [L
 | Icons | VS Code logo | Kiro's own executable icon is read at runtime; the plugin icon is the Kiro app icon (see Trademarks) |
 | Translations | 17 locales | English only (the old strings described VS Code and SSH features and were not re-reviewed) |
 
-## Behaviour
+## Verification status and known limitations
 
-- Local folders and `.code-workspace` files from Kiro's recent list are shown. Matching uses Flow Launcher's fuzzy search.
-- Enter opens the workspace in Kiro. Ctrl+Enter, or the context menu, opens a local folder in the file manager.
-- You can add extra folders or workspace URIs in the plugin's settings.
-- If Kiro cannot be found, the plugin says so instead of failing silently.
-- If the Kiro executable was moved or a local folder was deleted, or the process cannot start, a notification is shown.
+What the automated build covers: GitHub Actions restores, builds in Release, runs the 47 unit tests and packages the plugin ZIP
+on every run of the **build** workflow.
 
-## Requirements
+What is not covered by automated tests:
 
-- Windows x64 with Flow Launcher installed.
-- Kiro installed. Per-user installs in `%LOCALAPPDATA%\Programs\Kiro` and installs whose `bin` folder is on `PATH` are detected.
-- No .NET SDK is needed to *use* the plugin. It is built with `net7.0-windows` and relies on the .NET runtime that Flow Launcher provides.
+- Loading the plugin inside Flow Launcher.
+- Launching Kiro from the plugin.
+- Which Flow Launcher versions work. No version compatibility has been verified.
 
-## Install
+A green build does not prove any of these.
 
-1. Open the latest successful run of the **build** workflow under the repository's *Actions* tab.
-2. Download the `Flow.Plugin.KiroWorkspace-<version>.zip` artifact.
-3. Close Flow Launcher.
-4. Extract the ZIP into a new folder named `Flow.Plugin.KiroWorkspace` in Flow Launcher's user plugin directory:
-   `%APPDATA%\FlowLauncher\Plugins\` (for the portable edition use `UserData\Plugins\` next to the executable).
-   `plugin.json` must sit directly inside that folder.
-5. Start Flow Launcher and type `k`.
+Known limitations:
 
-## Remote workspaces (WSL, SSH, Dev Containers)
+- **Remote workspaces are unverified.** Recent entries that use the `vscode-remote://` scheme (SSH, WSL, Dev Containers) are
+  parsed, listed and passed to Kiro with `--folder-uri`. Whether Kiro stores such entries and can reopen them depends on the
+  remote extension you have installed. This has not been tested against any remote setup. For these entries, the file manager
+  actions are not offered.
+- **Portable layouts are unverified.** A `data` folder next to `Kiro.exe` is supported in code, carried over from VS Code's
+  layout, but has not been tested.
+- **SSH host discovery was removed.** The VS Code plugin read hosts from an SSH config file and relied on Microsoft's Remote - SSH
+  extension. That cannot be assumed for Kiro.
+- **English only.**
+- **Where the checks were made.** The storage locations and the `--folder-uri` / `--file-uri` options were checked by the
+  maintainer on one Windows machine with Kiro 1.1.70 installed.
 
-Recent entries that use the `vscode-remote://` scheme (SSH, WSL, Dev Containers) are still parsed and passed to Kiro with
-`--folder-uri`. **This is unverified.** Kiro does not ship Microsoft's Remote extensions, so whether those entries exist
-and whether Kiro can reopen them depends on the remote extension you have installed. Nothing here has been tested against a remote setup.
+## Building
 
-Discovery of hosts from an SSH config file was removed, because it relied on Microsoft's `ms-vscode-remote.remote-ssh`
-extension id and flags that cannot be assumed for Kiro.
+Builds run only in GitHub Actions, using [`.github/workflows/build.yml`](.github/workflows/build.yml). The workflow runs on pushes to
+`main` and `feat/**`, on pull requests, and manually. It restores, builds in Release for x64, runs the tests, then publishes for
+`win-x64` and zips the output as the plugin package. It checks that `plugin.json`, the plugin DLL and the SQLite libraries are in the ZIP.
 
-Portable layouts (a `data` folder next to `Kiro.exe`) are carried over from VS Code's layout and are also unverified.
+[`global.json`](global.json) pins .NET SDK 7.0.410 (rolling forward within the 7.0 feature bands), and the project targets
+`net7.0-windows`. A local SDK is optional: if you have the .NET 7 SDK installed, you can build the same way the workflow does:
 
-## Verification status
+```
+dotnet build Flow.Plugin.KiroWorkspace.sln -c Release -p:Platform=x64
+```
 
-What is verified:
-- On a Windows machine with Kiro 1.1.70 installed: `Kiro.exe`, `bin\kiro.cmd`, `%APPDATA%\Kiro`, and a `history.recentlyOpenedPathsList` entry
-  in `~\.kiro-shared\sharedStorage\state.vscdb` containing `folderUri` items exist, and Kiro's CLI code contains the `--folder-uri` and `--file-uri` options.
-- Restore, build, unit tests and packaging run in GitHub Actions (see the workflow).
+## Credits and relationship to the original project
 
-What is not verified by the automated build:
-- Loading the plugin inside Flow Launcher, and actually launching Kiro from it. A green build does not prove either.
+This is a fork of [taooceros/Flow.Plugin.VSCodeWorkspace](https://github.com/taooceros/Flow.Plugin.VSCodeWorkspace),
+the VS Code Workspaces plugin for Flow Launcher, adapted for Kiro. The original code in turn comes from
+[Microsoft PowerToys](https://github.com/microsoft/PowerToys/tree/main/src/modules/launcher/Plugins/Community.PowerToys.Run.Plugin.VSCodeWorkspaces).
+Thanks to the original authors (ricardosantos9521, MaskedRPGFan, taooceros and contributors).
 
-## Build
+This project is independent. It is **not** affiliated with or endorsed by the original author, Microsoft, Kiro or Flow Launcher.
+The original Git history is preserved; see `git log`.
 
-Builds run in GitHub Actions ([`.github/workflows/build.yml`](.github/workflows/build.yml)): restore, Release build, tests, then
-`dotnet publish -r win-x64` zipped as the plugin package. Triggered on pushes to `main` and `feat/**`, on pull requests and manually.
-If you do have the .NET 7 SDK locally, `dotnet build -c Release -p:Platform=x64` works the same way.
+## License
+
+Licensed under the MIT license, see [LICENSE](LICENSE). Third-party licenses and notices are in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Trademarks
 
