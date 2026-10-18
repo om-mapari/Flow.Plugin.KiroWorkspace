@@ -1,24 +1,21 @@
-﻿// Copyright (c) Microsoft Corporation
+// Copyright (c) Microsoft Corporation
 // The Microsoft Corporation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
-
-namespace Flow.Plugin.VSCodeWorkspaces
+namespace Flow.Plugin.KiroWorkspace
 {
     using Flow.Launcher.Plugin;
+    using KiroHelper;
     using Properties;
-    using RemoteMachinesHelper;
-    using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
-    using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
     using System.Windows.Controls;
-    using VSCodeHelper;
     using WorkspacesHelper;
 
     public class Main : IPlugin, IPluginI18n, ISettingProvider, IContextMenu
     {
+        private const string FallbackIconPath = "Images\\kiro.png";
+
         internal static PluginInitContext Context { get; private set; }
 
         private static Settings _settings;
@@ -27,22 +24,32 @@ namespace Flow.Plugin.VSCodeWorkspaces
 
         public string Description => GetTranslatedPluginDescription();
 
-        private VSCodeInstance _defaultInstance;
+        private KiroInstance _defaultInstance;
 
-        private readonly VSCodeWorkspacesApi _workspacesApi = new();
-
-        private readonly VSCodeRemoteMachinesApi _machinesApi = new();
+        private readonly KiroWorkspacesApi _workspacesApi = new();
 
         public List<Result> Query(Query query)
         {
-            var results = new List<Result>();
-            var workspaces = new List<VsCodeWorkspace>();
+            // Kiro may have been installed after Flow Launcher started.
+            if (KiroInstances.Instances.Count == 0)
+            {
+                KiroInstances.LoadKiroInstances();
+                _defaultInstance = KiroInstances.Instances.FirstOrDefault();
+            }
+
+            if (KiroInstances.Instances.Count == 0)
+            {
+                return new List<Result> { CreateKiroNotFoundResult() };
+            }
+
+            var workspaces = new List<RecentWorkspace>();
 
             // User defined extra workspaces
             if (_defaultInstance != null)
             {
-                workspaces.AddRange(_settings.CustomWorkspaces.Select(uri =>
-                    VSCodeWorkspacesApi.ParseVSCodeUri(uri, _defaultInstance)));
+                workspaces.AddRange(_settings.CustomWorkspaces
+                    .Select(uri => KiroWorkspacesApi.ParseUri(uri, _defaultInstance))
+                    .Where(ws => ws != null));
             }
 
             // Search opened workspaces
@@ -52,61 +59,7 @@ namespace Flow.Plugin.VSCodeWorkspaces
             }
 
             // Simple de-duplication
-            results.AddRange(workspaces.Distinct()
-                .Select(CreateWorkspaceResult)
-            );
-
-            // Search opened remote machines
-            if (_settings.DiscoverMachines)
-            {
-                _machinesApi.Machines.ForEach(a =>
-                {
-                    var title = $"{a.Host}";
-
-                    if (!string.IsNullOrEmpty(a.User) && !string.IsNullOrEmpty(a.HostName))
-                    {
-                        title += $" [{a.User}@{a.HostName}]";
-                    }
-
-                    var tooltip = Resources.SSHRemoteMachine;
-
-                    results.Add(new Result
-                    {
-                        Title = title,
-                        SubTitle = Resources.SSHRemoteMachine,
-                        Icon = a.VSCodeInstance.RemoteIcon,
-                        TitleToolTip = tooltip,
-                        Action = c =>
-                        {
-                            bool hide;
-                            try
-                            {
-                                var process = new ProcessStartInfo
-                                {
-                                    FileName = a.VSCodeInstance.ExecutablePath,
-                                    UseShellExecute = true,
-                                    Arguments =
-                                        $"--new-window --enable-proposed-api ms-vscode-remote.remote-ssh --remote ssh-remote+{((char)34) + a.Host + ((char)34)}",
-                                    WindowStyle = ProcessWindowStyle.Hidden,
-                                };
-                                Process.Start(process);
-
-                                hide = true;
-                            }
-                            catch (Win32Exception)
-                            {
-                                var name = $"{Context.CurrentPluginMetadata.Name}";
-                                string msg = Resources.OpenFail;
-                                Context.API.ShowMsg(name, msg, string.Empty);
-                                hide = false;
-                            }
-
-                            return hide;
-                        },
-                        ContextData = a,
-                    });
-                });
-            }
+            var results = workspaces.Distinct().Select(CreateWorkspaceResult).ToList();
 
             if (query.ActionKeyword == string.Empty ||
                 (query.ActionKeyword != string.Empty && query.Search != string.Empty))
@@ -118,15 +71,24 @@ namespace Flow.Plugin.VSCodeWorkspaces
                 }).ToList();
             }
 
-
             return results;
         }
 
-        private static Result CreateWorkspaceResult(VsCodeWorkspace ws)
+        private static Result CreateKiroNotFoundResult()
+        {
+            return new Result
+            {
+                Title = Resources.KiroNotFound,
+                SubTitle = Resources.KiroNotFoundSubTitle,
+                IcoPath = FallbackIconPath,
+                Action = _ => false,
+            };
+        }
+
+        private static Result CreateWorkspaceResult(RecentWorkspace ws)
         {
             var title = $"{ws.FolderName}";
             var typeWorkspace = ws.WorkspaceTypeToString();
-
             if (ws.WorkspaceLocation != WorkspaceLocation.Local)
             {
                 title = ws.Label != null
@@ -137,50 +99,78 @@ namespace Flow.Plugin.VSCodeWorkspaces
             var tooltip =
                 $"{Resources.Workspace}{(ws.WorkspaceLocation != WorkspaceLocation.Local ? $" {Resources.In} {typeWorkspace}" : string.Empty)}: {SystemPath.RealPath(ws.RelativePath)}";
 
-            return new Result
+            var result = new Result
             {
                 Title = title,
                 SubTitle = tooltip,
-                Icon = ws.VSCodeInstance.WorkspaceIcon,
                 TitleToolTip = tooltip,
                 Action = c =>
                 {
-                    try
+                    // Ctrl+Enter opens the folder in the file manager (local folders only).
+                    if (ws.WorkspaceLocation == WorkspaceLocation.Local &&
+                        c.SpecialKeyState.ToModifierKeys() == System.Windows.Input.ModifierKeys.Control)
                     {
-                        var modifierKeys = c.SpecialKeyState.ToModifierKeys();
-                        if (modifierKeys == System.Windows.Input.ModifierKeys.Control)
-                        {
-                            Context.API.OpenDirectory(SystemPath.RealPath(ws.RelativePath));
-                            return true;
-                        }
+                        return OpenInFileManager(ws);
+                    }
 
-                        var process = new ProcessStartInfo
-                        {
-                            FileName = ws.VSCodeInstance.ExecutablePath,
-                            UseShellExecute = true,
-                            WindowStyle = ProcessWindowStyle.Hidden,
-                        };
-
-                        process.ArgumentList.Add(ws.WorkspaceType == WorkspaceType.Workspace
-                            ? "--file-uri"
-                            : "--folder-uri");
-
-                        process.ArgumentList.Add(ws.Path);
-
-                        Process.Start(process);
+                    var outcome = KiroLauncher.Launch(ws);
+                    if (outcome == LaunchOutcome.Success)
+                    {
                         return true;
                     }
-                    catch (Win32Exception)
-                    {
-                        var name = $"{Context.CurrentPluginMetadata.Name}";
-                        string msg = Resources.OpenFail;
-                        Context.API.ShowMsg(name, msg, string.Empty);
-                    }
 
+                    ShowLaunchFailure(outcome, ws);
                     return false;
                 },
                 ContextData = ws,
             };
+
+            ApplyIcon(result, ws.KiroInstance);
+            return result;
+        }
+
+        private static void ApplyIcon(Result result, KiroInstance instance)
+        {
+            if (instance?.WorkspaceIconBitMap != null)
+            {
+                result.Icon = instance.WorkspaceIcon;
+            }
+            else
+            {
+                result.IcoPath = FallbackIconPath;
+            }
+        }
+
+        private static bool OpenInFileManager(RecentWorkspace ws)
+        {
+            if (!KiroLauncher.LocalPathExists(ws))
+            {
+                ShowLaunchFailure(LaunchOutcome.PathMissing, ws);
+                return false;
+            }
+
+            var path = SystemPath.RealPath(ws.RelativePath);
+
+            // A .code-workspace entry points at a file; show the folder that contains it.
+            if (ws.WorkspaceType == WorkspaceType.Workspace)
+            {
+                path = System.IO.Path.GetDirectoryName(path) ?? path;
+            }
+
+            Context.API.OpenDirectory(path);
+            return true;
+        }
+
+        private static void ShowLaunchFailure(LaunchOutcome outcome, RecentWorkspace ws)
+        {
+            var message = outcome switch
+            {
+                LaunchOutcome.ExecutableMissing => Resources.KiroExecutableMissing,
+                LaunchOutcome.PathMissing => $"{Resources.PathNotFound} {SystemPath.RealPath(ws.RelativePath)}",
+                _ => Resources.OpenFail,
+            };
+
+            Context.API.ShowMsg(Context.CurrentPluginMetadata.Name, message, string.Empty);
         }
 
         public void Init(PluginInitContext context)
@@ -188,11 +178,9 @@ namespace Flow.Plugin.VSCodeWorkspaces
             Context = context;
             _settings = context.API.LoadSettingJsonStorage<Settings>();
 
-            VSCodeInstances.LoadVSCodeInstances();
+            KiroInstances.LoadKiroInstances();
 
-            // Prefer stable version, or the first one we got
-            _defaultInstance = VSCodeInstances.Instances.Find(e => e.VSCodeVersion == VSCodeVersion.Stable) ??
-                              VSCodeInstances.Instances.FirstOrDefault();
+            _defaultInstance = KiroInstances.Instances.FirstOrDefault();
         }
 
         public Control CreateSettingPanel() => new SettingsView(Context, _settings);
@@ -215,21 +203,20 @@ namespace Flow.Plugin.VSCodeWorkspaces
         public List<Result> LoadContextMenus(Result selectedResult)
         {
             List<Result> results = new();
-            if (selectedResult.ContextData is VsCodeWorkspace ws && ws.WorkspaceLocation == WorkspaceLocation.Local)
+
+            if (selectedResult.ContextData is RecentWorkspace ws && ws.WorkspaceLocation == WorkspaceLocation.Local)
             {
-                results.Add(new Result
+                var menuItem = new Result
                 {
                     Title = Resources.OpenFolder,
                     SubTitle = Resources.OpenFolderSubTitle,
-                    Icon = ws.VSCodeInstance.WorkspaceIcon,
                     TitleToolTip = Resources.OpenFolderSubTitle,
-                    Action = c =>
-                    {
-                        Context.API.OpenDirectory(SystemPath.RealPath(ws.RelativePath));
-                        return true;
-                    },
+                    Action = c => OpenInFileManager(ws),
                     ContextData = ws,
-                });
+                };
+
+                ApplyIcon(menuItem, ws.KiroInstance);
+                results.Add(menuItem);
             }
 
             return results;

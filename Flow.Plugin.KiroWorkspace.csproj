@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net7.0-windows</TargetFramework>
-		<ProjectGuid>{4D971245-7A70-41D5-BAA0-DDB5684CAF51}</ProjectGuid>
+		<ProjectGuid>{65F69C1C-8E7B-4235-8756-78D4CEA1C1CE}</ProjectGuid>
 		<AppDesignerFolder>Properties</AppDesignerFolder>
-		<RootNamespace>Flow.Plugin.VSCodeWorkspaces</RootNamespace>
-		<AssemblyName>Flow.Plugin.VSCodeWorkspaces</AssemblyName>
+		<RootNamespace>Flow.Plugin.KiroWorkspace</RootNamespace>
+		<AssemblyName>Flow.Plugin.KiroWorkspace</AssemblyName>
 		<OutputType>Library</OutputType>
 		<Version>1.0</Version>
 		<UseWpf>true</UseWpf>
@@ -17,7 +17,7 @@
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
 		<DebugSymbols>true</DebugSymbols>
-		<OutputPath>Output\Debug\VSCodeWorkspaces\</OutputPath>
+		<OutputPath>Output\Debug\KiroWorkspace\</OutputPath>
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 		<DebugType>portable</DebugType>
 		<PlatformTarget>x64</PlatformTarget>
@@ -28,7 +28,7 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-		<OutputPath>Output\Release\VSCodeWorkspaces\</OutputPath>
+		<OutputPath>Output\Release\KiroWorkspace\</OutputPath>
 		<DefineConstants>TRACE</DefineConstants>
 		<Optimize>true</Optimize>
 		<DebugType>portable</DebugType>
@@ -38,6 +38,13 @@
 		<WarningLevel>4</WarningLevel>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	</PropertyGroup>
+	<ItemGroup>
+		<!-- Only the plugin project itself. The test project lives in tests/ and must not be compiled in here. -->
+		<Compile Remove="tests\**" />
+		<EmbeddedResource Remove="tests\**" />
+		<None Remove="tests\**" />
+		<InternalsVisibleTo Include="Flow.Plugin.KiroWorkspace.Tests" />
+	</ItemGroup>
 	<ItemGroup>
 		<Content Include="plugin.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -63,16 +70,13 @@
 		</EmbeddedResource>
 	</ItemGroup>
 	<ItemGroup>
+		<None Update="LICENSE;THIRD_PARTY_NOTICES.md">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Images\kiro.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 		<None Update="Images\folder.png">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Images\monitor.png">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Images\code-dark.png">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Images\code-light.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

@@ -1,0 +1,30 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.31903.286
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flow.Plugin.KiroWorkspace", "Flow.Plugin.KiroWorkspace.csproj", "{65F69C1C-8E7B-4235-8756-78D4CEA1C1CE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Flow.Plugin.KiroWorkspace.Tests", "tests\Flow.Plugin.KiroWorkspace.Tests\Flow.Plugin.KiroWorkspace.Tests.csproj", "{87A92490-C3F8-4F19-B510-34C542E7881E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{65F69C1C-8E7B-4235-8756-78D4CEA1C1CE}.Debug|x64.ActiveCfg = Debug|x64
+		{65F69C1C-8E7B-4235-8756-78D4CEA1C1CE}.Debug|x64.Build.0 = Debug|x64
+		{65F69C1C-8E7B-4235-8756-78D4CEA1C1CE}.Release|x64.ActiveCfg = Release|x64
+		{65F69C1C-8E7B-4235-8756-78D4CEA1C1CE}.Release|x64.Build.0 = Release|x64
+		{87A92490-C3F8-4F19-B510-34C542E7881E}.Debug|x64.ActiveCfg = Debug|x64
+		{87A92490-C3F8-4F19-B510-34C542E7881E}.Debug|x64.Build.0 = Debug|x64
+		{87A92490-C3F8-4F19-B510-34C542E7881E}.Release|x64.ActiveCfg = Release|x64
+		{87A92490-C3F8-4F19-B510-34C542E7881E}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B32E9D18-35FA-4CC2-84A1-BAE2048DD762}
+	EndGlobalSection
+EndGlobal

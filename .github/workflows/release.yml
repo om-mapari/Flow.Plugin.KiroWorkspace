@@ -1,0 +1,128 @@
+name: release
+
+# Publishes a GitHub Release with the plugin ZIP when a version tag (v1.2.3) is pushed.
+# The tag must equal "v" + the Version in plugin.json, because Flow Launcher's plugin store
+# (Flow.Launcher.PluginsManifest) derives the plugin version from the release tag.
+#
+# Running this workflow manually (workflow_dispatch) is a dry run: it builds, tests and packages,
+# uploads the ZIP as a workflow artifact, and does NOT create a release or tag.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.package.outputs.version }}
+      zip-name: ${{ steps.package.outputs.zip-name }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          # global.json pins the 7.0 SDK that matches the net7.0-windows target.
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Flow.Plugin.KiroWorkspace.sln -p:Platform=x64
+
+      - name: Build (Release)
+        run: dotnet build Flow.Plugin.KiroWorkspace.sln -c Release -p:Platform=x64 --no-restore
+
+      - name: Test
+        run: >
+          dotnet test tests/Flow.Plugin.KiroWorkspace.Tests/Flow.Plugin.KiroWorkspace.Tests.csproj
+          -c Release -p:Platform=x64 --no-build
+
+      - name: Package plugin
+        id: package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $meta = Get-Content plugin.json -Raw | ConvertFrom-Json
+          $version = $meta.Version
+
+          # On a tag build the tag must match plugin.json, otherwise the store would list the wrong version.
+          if ('${{ github.ref_type }}' -eq 'tag') {
+            $expected = "v$version"
+            if ('${{ github.ref_name }}' -ne $expected) {
+              throw "Tag '${{ github.ref_name }}' does not match plugin.json Version (expected '$expected')."
+            }
+          }
+
+          $name = "Flow.Plugin.KiroWorkspace-$version"
+          $stage = Join-Path 'artifacts/stage' $name
+
+          dotnet publish Flow.Plugin.KiroWorkspace.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained false --no-restore -o $stage
+          if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed with exit code $LASTEXITCODE" }
+
+          # plugin.json must be at the ZIP root, together with everything the plugin needs at runtime.
+          $required = @(
+            'plugin.json',
+            $meta.ExecuteFileName,
+            'Flow.Plugin.KiroWorkspace.deps.json',
+            'Microsoft.Data.Sqlite.dll',
+            'Images/folder.png',
+            'Images/kiro.png',
+            'LICENSE'
+          )
+          foreach ($file in $required) {
+            if (-not (Test-Path (Join-Path $stage $file))) { throw "Package is missing required file: $file" }
+          }
+          if (-not (Get-ChildItem $stage -Recurse -Filter 'e_sqlite3.dll')) { throw 'Package is missing the native SQLite library (e_sqlite3.dll)' }
+
+          $zip = Join-Path (Resolve-Path 'artifacts').Path "$name.zip"
+          7z a -tzip -mx=9 $zip "./$stage/*"
+          if ($LASTEXITCODE -ne 0) { throw "7z failed with exit code $LASTEXITCODE" }
+          7z l $zip
+
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "zip-name=$name.zip" >> $env:GITHUB_OUTPUT
+          "zip-path=$zip" >> $env:GITHUB_OUTPUT
+
+      - name: Upload plugin ZIP
+        uses: actions/upload-artifact@v7
+        with:
+          name: plugin-zip
+          path: ${{ steps.package.outputs.zip-path }}
+          if-no-files-found: error
+
+  publish:
+    # Only for pushed tags. A manual run stops after "package" (dry run).
+    if: github.ref_type == 'tag'
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download plugin ZIP
+        uses: actions/download-artifact@v8
+        with:
+          name: plugin-zip
+          path: dist
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          ZIP_NAME: ${{ needs.package.outputs.zip-name }}
+        run: >
+          gh release create "$TAG" "dist/$ZIP_NAME"
+          --repo "$GITHUB_REPOSITORY"
+          --title "Kiro Workspaces $TAG"
+          --generate-notes
+          --verify-tag

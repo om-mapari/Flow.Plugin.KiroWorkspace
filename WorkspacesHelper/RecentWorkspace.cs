@@ -1,38 +1,42 @@
 ﻿// Copyright (c) Microsoft Corporation
 // The Microsoft Corporation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+using Flow.Plugin.KiroWorkspace.KiroHelper;
+using Flow.Plugin.KiroWorkspace.Properties;
 
-using System;
-using Flow.Plugin.VSCodeWorkspaces.Properties;
-using Flow.Plugin.VSCodeWorkspaces.VSCodeHelper;
-
-namespace Flow.Plugin.VSCodeWorkspaces.WorkspacesHelper
+namespace Flow.Plugin.KiroWorkspace.WorkspacesHelper
 {
-    public record VsCodeWorkspace
+    public record RecentWorkspace
     {
+        /// <summary>
+        /// Unescaped URI, used for display and de-duplication.
+        /// </summary>
         public PathString Path { get; init; }
+
+        /// <summary>
+        /// The URI exactly as Kiro stored it. This is what is handed back to Kiro when opening the workspace.
+        /// </summary>
+        public string OriginalUri { get; init; }
 
         public PathString RelativePath { get; init; }
 
         public PathString FolderName { get; init; }
-        
+
         public string Label { get; init; }
 
         public string ExtraInfo { get; init; }
 
         public WorkspaceLocation WorkspaceLocation { get; init; }
-        
-        public WorkspaceType WorkspaceType { get; init; }
 
-        public VSCodeInstance VSCodeInstance { get; init; }
+        public WorkspaceType WorkspaceType { get; init; } = WorkspaceType.Folder;
+
+        public KiroInstance KiroInstance { get; init; }
 
         public string WorkspaceTypeToString()
         {
             return WorkspaceLocation switch
             {
                 WorkspaceLocation.Local => Resources.TypeWorkspaceLocal,
-                WorkspaceLocation.Codespaces => "Codespaces",
-                WorkspaceLocation.RemoteContainers => Resources.TypeWorkspaceContainer,
                 WorkspaceLocation.RemoteSSH => "SSH",
                 WorkspaceLocation.RemoteWSL => "WSL",
                 WorkspaceLocation.DevContainer => Resources.TypeWorkspaceDevContainer,
@@ -44,10 +48,8 @@ namespace Flow.Plugin.VSCodeWorkspaces.WorkspacesHelper
     public enum WorkspaceLocation
     {
         Local = 1,
-        Codespaces = 2,
         RemoteWSL = 3,
         RemoteSSH = 4,
-        RemoteContainers = 5,
         DevContainer = 6,
     }
 

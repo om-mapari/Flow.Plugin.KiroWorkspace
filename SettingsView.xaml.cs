@@ -1,11 +1,11 @@
-using Flow.Launcher.Plugin;
-using Flow.Plugin.VSCodeWorkspaces.WorkspacesHelper;
+﻿using Flow.Launcher.Plugin;
+using Flow.Plugin.KiroWorkspace.WorkspacesHelper;
 using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Flow.Plugin.VSCodeWorkspaces
+namespace Flow.Plugin.KiroWorkspace
 {
     /// <summary>
     /// Interaction logic for SettingsView.xaml
@@ -41,7 +41,7 @@ namespace Flow.Plugin.VSCodeWorkspaces
                 var uri = addUri.Text;
 
                 // System.Uri fails to parse vscode-remote://XXX+YYY URIs, skip them
-                var type = ParseVSCodeUri.GetTypeWorkspace(uri).workspaceLocation;
+                var type = KiroUriParser.GetTypeWorkspace(uri).workspaceLocation;
                 if (!type.HasValue || type.Value == WorkspaceLocation.Local)
                 {
                     // Converts file paths to proper URI
