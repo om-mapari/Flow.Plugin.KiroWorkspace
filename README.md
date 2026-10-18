@@ -18,29 +18,17 @@ Type the action keyword `k`, then part of a folder name, and press Enter.
 
 ## Screenshots
 
-<!--
-TODO (maintainer): add real screenshots, then remove the "coming soon" lines and uncomment the image links.
-Expected files (not created yet; the docs/images folder does not exist):
-  docs/images/search.png        Flow Launcher with `k` typed and a list of recent Kiro workspaces.
-  docs/images/settings.png      Flow Settings > Plugins > Kiro Workspaces, showing the settings panel.
-  docs/images/context-menu.png  The context menu of a workspace result showing "Open Folder".
--->
+Search results (here with the keyword `k`):
 
-Search results:
-
-_Screenshot coming soon_
-<!-- ![Search results](docs/images/search.png) -->
+![Search results](docs/images/search.png)
 
 Plugin settings:
 
-_Screenshot coming soon_
-<!-- ![Plugin settings](docs/images/settings.png) -->
+![Plugin settings](docs/images/settings.png)
 
 Context menu:
 
-_Screenshot coming soon_
-<!-- ![Context menu](docs/images/context-menu.png) -->
-
+![Context menu](docs/images/context-menu.png)
 ## Requirements
 
 - Windows x64 with Flow Launcher installed.
