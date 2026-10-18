@@ -6,7 +6,7 @@
 		<RootNamespace>Flow.Plugin.KiroWorkspace</RootNamespace>
 		<AssemblyName>Flow.Plugin.KiroWorkspace</AssemblyName>
 		<OutputType>Library</OutputType>
-		<Version>1.0</Version>
+		<Version>0.1.0</Version>
 		<UseWpf>true</UseWpf>
 		<Platforms>x64</Platforms>
 		<AppendRuntimeIdentifierToOutputPath>False</AppendRuntimeIdentifierToOutputPath>

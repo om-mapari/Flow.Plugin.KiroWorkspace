@@ -57,7 +57,7 @@ workflow on the **Actions** tab.
 If the plugin is listed in Flow Launcher's plugin store, you can install it from Settings > Plugin Store instead.
 Until then, install it manually:
 1. Close Flow Launcher.
-2. Create a folder for the plugin under `%APPDATA%\FlowLauncher\Plugins\`, for example `Kiro Workspaces-1.0.0`, and
+2. Create a folder for the plugin under `%APPDATA%\FlowLauncher\Plugins\`, for example `Kiro Workspaces-0.1.0`, and
    extract the ZIP into it. `plugin.json` must sit directly inside that folder, not in a subfolder.
 3. Start Flow Launcher again.
 
